@@ -40,6 +40,7 @@ template <class T> class sorted_vtr {
 		//If there are any other elements == search, they ALL go AFTER retval;
 		long BinSearch(const T &t);
 		long GetSize() {return size; }
+		void Print();
 };
 template <class T>
 long sorted_vtr<T>::_GetFirstEmpty() {
@@ -55,13 +56,7 @@ long sorted_vtr<T>::_GetFirstEmpty() {
 }
 template <class T>
 int sorted_vtr<T>::Insert(const T &t) {
-	long i = 0;
-	for (; i < size; i++) {
-		if (cmp(array[index[i]], t) == 1) {
-			break;
-		}
-	}
-	
+	long i = BinSearch(t);	
 	size++;
 	if (allocated == 0)  allocated = 1024;
 	if (size >= allocated) allocated = 2*allocated;
@@ -73,12 +68,15 @@ int sorted_vtr<T>::Insert(const T &t) {
 	if (array == NULL) {
 		return errno;
 	}
-	bitmask = (char *)realloc(bitmask, allocated / 8 *sizeof(char));
+	bitmask = (char *)realloc(bitmask, allocated);
 	if (bitmask == NULL) {
 		return errno;
 	}
 	memcpy(&array[first_empty], &t, sizeof(T));
 	bitmask[first_empty/8] = bitmask[first_empty/8] + (1<<(first_empty % 8));
+	if (cmp (array[index[i]], t) < 0) {
+		i++;
+	}
 	if (size != 1) {
 		long new_i = first_empty;
 		long temp;
@@ -129,14 +127,7 @@ long sorted_vtr<T> :: BinSearch(const T &t) {
 			begin = i + 1;
 			continue;
 		}
-		if (result > 0) {
-			end = i - 1;
-			continue;
-		}
-		if (result == 0) {
-			end = i;
-			continue;
-		}
+		end = i;	
 	}
 	return begin;
 }
