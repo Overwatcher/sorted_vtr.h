@@ -17,6 +17,7 @@ template <class T> class sorted_vtr {
 		char *bitmask;
 		T* array;
 		long _GetFirstEmpty();
+		long _Insert(const T&, const long);
 	public:
 		sorted_vtr() {
 			size = 0;
@@ -31,7 +32,8 @@ template <class T> class sorted_vtr {
 			free (index);
 			free (bitmask);
 		}
-		int Insert(const T&);
+		long Insert(const T&);
+		long InsertUnique(const T&);
 		long Remove(const T&);
 		int Change(const T& was, const T& will);
 		T& operator[](long i);		
@@ -55,9 +57,9 @@ long sorted_vtr<T>::_GetFirstEmpty() {
 	}	
 }
 template <class T>
-int sorted_vtr<T>::Insert(const T &t) {
-	long i = BinSearch(t);	
+long sorted_vtr<T>::_Insert(const T &t, const long pos) {	
 	size++;
+	long i = pos;
 	char need_alloc = 0;
 	if (allocated == 0)  {
 		need_alloc = 2;
@@ -72,7 +74,7 @@ int sorted_vtr<T>::Insert(const T &t) {
 		if (need_alloc == 1) bufpointer = realloc(index, allocated * sizeof(long));
 		else bufpointer = malloc(allocated * sizeof(long));
 		if (bufpointer == NULL) {
-			return errno;
+			return -1;
 		}
 		else {
 			index = (long *)bufpointer;
@@ -80,7 +82,7 @@ int sorted_vtr<T>::Insert(const T &t) {
 		if (need_alloc == 1) bufpointer = realloc(array, allocated * sizeof(T));
 		else bufpointer = malloc(allocated * sizeof(T));	
 		if (bufpointer == NULL) {
-			return errno;
+			return -2;
 		}
 		else {
 			array = (T*)bufpointer;
@@ -88,7 +90,7 @@ int sorted_vtr<T>::Insert(const T &t) {
 		if (need_alloc == 1) bufpointer = realloc(bitmask, allocated);
 		else bufpointer = malloc(allocated);
 		if (bufpointer == NULL) {
-			return errno;
+			return -3;
 		}
 		else {
 			bitmask = (char *)bufpointer;
@@ -96,7 +98,7 @@ int sorted_vtr<T>::Insert(const T &t) {
 	}
 	bufpointer = memcpy(&array[first_empty], &t, sizeof(T));
 	if (bufpointer == NULL) {
-		return errno;
+		return -4;
 	}
 	bitmask[first_empty/8] = bitmask[first_empty/8] + (1<<(first_empty % 8));
 	if (cmp (array[index[i]], t) < 0) {
@@ -112,8 +114,20 @@ int sorted_vtr<T>::Insert(const T &t) {
 		}
 	}
 	first_empty = _GetFirstEmpty();
-	return 0;
+	return pos;
 };
+template <class T>
+long sorted_vtr<T>::Insert(const T &t) {
+	long pos = BinSearch(t);
+	return _Insert(t, pos);
+}
+template <class T>
+long sorted_vtr<T>::InsertUnique(const T &t) {
+	long pos = BinSearch(t);
+	if (size != 0 && cmp(array[index[pos]], t) == 0) return pos;
+	return _Insert(t, pos);
+	
+}
 template <class T>
 T& sorted_vtr<T> :: operator[](long i) {
 	if (size <= i) {
