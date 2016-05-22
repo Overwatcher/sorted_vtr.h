@@ -40,7 +40,6 @@ template <class T> class sorted_vtr {
 		//If there are any other elements == search, they ALL go AFTER retval;
 		long BinSearch(const T &t);
 		long GetSize() {return size; }
-		void Print();
 };
 template <class T>
 long sorted_vtr<T>::_GetFirstEmpty() {
