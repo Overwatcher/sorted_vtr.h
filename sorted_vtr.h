@@ -1,5 +1,6 @@
 #pragma once
 #include <stdlib.h>
+#include <iostream>
 #include <errno.h>
 #include <stdexcept>
 #include <string.h>
@@ -57,21 +58,46 @@ template <class T>
 int sorted_vtr<T>::Insert(const T &t) {
 	long i = BinSearch(t);	
 	size++;
-	if (allocated == 0)  allocated = 1024;
-	if (size >= allocated) allocated = 2*allocated;
-	index = (long *)realloc(index, allocated * sizeof(long));
-	if (index == NULL) {
+	char need_alloc = 0;
+	if (allocated == 0)  {
+		need_alloc = 2;
+		allocated = 70000;
+	}
+	void * bufpointer;
+	if (size >= allocated) {
+		need_alloc = 1;
+		allocated = 2*allocated;
+	}
+	if (need_alloc > 0) {
+		if (need_alloc == 1) bufpointer = realloc(index, allocated * sizeof(long));
+		else bufpointer = malloc(allocated * sizeof(long));
+		if (bufpointer == NULL) {
+			return errno;
+		}
+		else {
+			index = (long *)bufpointer;
+		}
+		if (need_alloc == 1) bufpointer = realloc(array, allocated * sizeof(T));
+		else bufpointer = malloc(allocated * sizeof(T));	
+		if (bufpointer == NULL) {
+			return errno;
+		}
+		else {
+			array = (T*)bufpointer;
+		}
+		if (need_alloc == 1) bufpointer = realloc(bitmask, allocated);
+		else bufpointer = malloc(allocated);
+		if (bufpointer == NULL) {
+			return errno;
+		}
+		else {
+			bitmask = (char *)bufpointer;
+		}
+	}
+	bufpointer = memcpy(&array[first_empty], &t, sizeof(T));
+	if (bufpointer == NULL) {
 		return errno;
 	}
-	array = (T*)realloc(array, allocated * sizeof(T));	
-	if (array == NULL) {
-		return errno;
-	}
-	bitmask = (char *)realloc(bitmask, allocated);
-	if (bitmask == NULL) {
-		return errno;
-	}
-	memcpy(&array[first_empty], &t, sizeof(T));
 	bitmask[first_empty/8] = bitmask[first_empty/8] + (1<<(first_empty % 8));
 	if (cmp (array[index[i]], t) < 0) {
 		i++;
