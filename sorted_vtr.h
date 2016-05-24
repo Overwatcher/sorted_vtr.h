@@ -7,6 +7,9 @@
 //These cmp functions are here just for testing. For other types implement your own cmp
 int cmp(const char* s1, const char *s2);
 int cmp(const int s1, const int s2);
+//newalloc
+template <class T>
+T* newalloc(T* old, long oldsize, long newsize);
 //!!! sorted_vtr<T>::Change(...) !!! hasn't been implemented yet
 template <class T> class sorted_vtr {
 	private:
@@ -28,9 +31,9 @@ template <class T> class sorted_vtr {
 			bitmask = nullptr;
 		};
 		~sorted_vtr() {
-			free (array);
-			free (index);
-			free (bitmask);
+			delete (array);
+			delete (index);
+			delete (bitmask);
 		}
 		long Insert(const T&);
 		long InsertUnique(const T&);
@@ -59,6 +62,7 @@ long sorted_vtr<T>::_GetFirstEmpty() {
 template <class T>
 long sorted_vtr<T>::_Insert(const T &t, const long pos) {	
 	size++;
+	long wasallocated = allocated;
 	long i = pos;
 	char need_alloc = 0;
 	if (allocated == 0)  {
@@ -71,35 +75,14 @@ long sorted_vtr<T>::_Insert(const T &t, const long pos) {
 		allocated = 2*allocated;
 	}
 	if (need_alloc > 0) {
-		if (need_alloc == 1) bufpointer = realloc(index, allocated * sizeof(long));
-		else bufpointer = malloc(allocated * sizeof(long));
-		if (bufpointer == NULL) {
-			return -1;
-		}
-		else {
-			index = (long *)bufpointer;
-		}
-		if (need_alloc == 1) bufpointer = realloc(array, allocated * sizeof(T));
-		else bufpointer = malloc(allocated * sizeof(T));	
-		if (bufpointer == NULL) {
-			return -2;
-		}
-		else {
-			array = (T*)bufpointer;
-		}
-		if (need_alloc == 1) bufpointer = realloc(bitmask, allocated);
-		else bufpointer = malloc(allocated);
-		if (bufpointer == NULL) {
-			return -3;
-		}
-		else {
-			bitmask = (char *)bufpointer;
-		}
+		if (need_alloc == 1) index = newalloc<long>(index, wasallocated, allocated);
+		else index = new long[allocated];
+		if (need_alloc == 1) array = newalloc<T>(array, wasallocated, allocated);
+		else array = new T[allocated];
+		if (need_alloc == 1) bitmask = newalloc<char>(bitmask, wasallocated, allocated);
+		else bitmask = new char[allocated];
 	}
-	bufpointer = memcpy(&array[first_empty], &t, sizeof(T));
-	if (bufpointer == NULL) {
-		return -4;
-	}
+	array[first_empty] = t;
 	bitmask[first_empty/8] = bitmask[first_empty/8] + (1<<(first_empty % 8));
 	if (cmp (array[index[i]], t) < 0) {
 		i++;
@@ -169,6 +152,15 @@ long sorted_vtr<T> :: BinSearch(const T &t) {
 		end = i;	
 	}
 	return begin;
+}
+template <class T>
+T* newalloc(T* old, long oldsize, long newsize) {
+	T* retval = new T[newsize];
+	for (long i = 0; i < oldsize; i++) {
+		retval[i] = old[i];
+	}
+	delete old;
+	return retval;
 }
 int cmp(const char* s1, const char* s2) {
 	return strcmp(s1, s2);

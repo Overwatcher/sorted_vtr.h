@@ -6,19 +6,19 @@
 using namespace std;
 int main () {
 	srand(time(NULL));
-	sorted_vtr<long> vect;
-	for (long i = 0;  i <10000000; i++) {
-		int error = vect.Insert(i);
-		cout<<"STEP : "<<i<<endl;
-		if (error != 0) { cout<<"ERROR : "<<error<<endl; return 1; }
+	sorted_vtr<int> vtr1;
+	sorted_vtr<int> vtr2;
+	for (int i = 0; i < 10; i++) {
+		vtr1.Insert(i % 3);
+		vtr2.InsertUnique(i % 3);
 	}
-	FILE *fout = fopen("output.txt", "w");	
-	for (long i = 0; i < vect.GetSize(); i++) {
-		fprintf(fout, "%d ", vect[i]);
+	cout<<"vtr1:"<<endl;
+	for (int i = 0; i < vtr1.GetSize(); i++) {
+		cout<<vtr1[i]<<endl;
 	}
-	int a;
-	cin>>a;
-	fclose(fout);
-	cin>>a;
+	cout<<"vtr2:"<<endl;
+	for (int i = 0; i < vtr2.GetSize(); i++) {
+		cout<<vtr2[i]<<endl;
+	}
 	return 0;
 }
